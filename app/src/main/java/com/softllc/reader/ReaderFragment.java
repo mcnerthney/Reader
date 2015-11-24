@@ -40,6 +40,8 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.widget.Toast;
 
 import java.io.File;
@@ -56,6 +58,10 @@ import java.util.concurrent.TimeUnit;
 
 public class ReaderFragment extends Fragment
         implements View.OnClickListener, FragmentCompat.OnRequestPermissionsResultCallback {
+
+
+    private ScaleGestureDetector mScaleDetector;
+    private float mScaleFactor = 1.f;
 
     /**
      * Conversion from screen rotation to JPEG orientation.
@@ -135,6 +141,10 @@ public class ReaderFragment extends Fragment
 
         @Override
         public void onSurfaceTextureUpdated(SurfaceTexture texture) {
+            if ( mTextureView.getScaleFactor() != mLastZoom ) {
+                mLastZoom = mTextureView.getScaleFactor();
+                configureTransform(mViewWidth,mViewHeight);
+            }
         }
 
     };
@@ -147,7 +157,7 @@ public class ReaderFragment extends Fragment
     /**
      * An {@link AutoFitTextureView} for camera preview.
      */
-    private TextureView mTextureView;
+    private ZoomTextureView mTextureView;
 
     /**
      * A {@link CameraCaptureSession } for camera preview.
@@ -163,6 +173,8 @@ public class ReaderFragment extends Fragment
      * The {@link android.util.Size} of camera preview.
      */
     private Size mPreviewSize;
+
+    private boolean mFlashOn = false;
 
     /**
      * {@link CameraDevice.StateCallback} is called when {@link CameraDevice} changes its state.
@@ -248,6 +260,8 @@ public class ReaderFragment extends Fragment
      */
     private int mState = STATE_PREVIEW;
 
+    private int mViewHeight, mViewWidth;
+
     /**
      * A {@link Semaphore} to prevent the app from exiting before closing the camera.
      */
@@ -256,6 +270,7 @@ public class ReaderFragment extends Fragment
     /**
      * A {@link CameraCaptureSession.CaptureCallback} that handles events related to JPEG capture.
      */
+    private float mLastZoom = 0;
     private CameraCaptureSession.CaptureCallback mCaptureCallback
             = new CameraCaptureSession.CaptureCallback() {
 
@@ -401,7 +416,19 @@ public class ReaderFragment extends Fragment
     public void onViewCreated(final View view, Bundle savedInstanceState) {
         view.findViewById(R.id.picture).setOnClickListener(this);
         view.findViewById(R.id.info).setOnClickListener(this);
-        mTextureView = (TextureView) view.findViewById(R.id.texture);
+        view.findViewById(R.id.torch).setOnClickListener(this);
+        mTextureView = (ZoomTextureView) view.findViewById(R.id.texture);
+        mTextureView.setLongClickable(true);
+        view.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                mFlashOn = !mFlashOn;
+                Log.d("djm", "mFlashOn " + mFlashOn);
+                createCameraPreviewSession();
+                return true;
+            }
+        });
+
     }
 
     @Override
@@ -638,6 +665,7 @@ public class ReaderFragment extends Fragment
         }
     }
 
+
     /**
      * Creates a new {@link CameraCaptureSession} for camera preview.
      */
@@ -675,9 +703,11 @@ public class ReaderFragment extends Fragment
                                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                                         CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
                                 // Flash is automatically enabled when necessary.
-                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                                        CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
-
+                                //mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+                                //        CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
+                                if ( mFlashOn ) {
+                                    mPreviewRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_TORCH);
+                                }
                                 // Finally, we start displaying the camera preview.
                                 mPreviewRequest = mPreviewRequestBuilder.build();
                                 mCaptureSession.setRepeatingRequest(mPreviewRequest,
@@ -707,12 +737,17 @@ public class ReaderFragment extends Fragment
      * @param viewWidth  The width of `mTextureView`
      * @param viewHeight The height of `mTextureView`
      */
+
     private void configureTransform(int viewWidth, int viewHeight) {
         Activity activity = getActivity();
         if (null == mTextureView || null == mPreviewSize || null == activity) {
             return;
         }
+        mViewHeight = viewHeight;
+        mViewWidth = viewWidth;
 
+        float zoom = mTextureView.getScaleFactor();
+        Log.d("djm","zoom " + zoom);
         Matrix matrix = new Matrix();
         RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
         RectF bufferRect = new RectF(0, 0, mPreviewSize.getHeight(), mPreviewSize.getWidth());
@@ -721,8 +756,8 @@ public class ReaderFragment extends Fragment
         bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY());
         matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL);
         float scale = Math.max(
-                (float) viewHeight * 2.2f/ mPreviewSize.getHeight(),
-                (float) viewWidth * 2.2f / mPreviewSize.getWidth());
+                (float) viewHeight * zoom / mPreviewSize.getHeight(),
+                (float) viewWidth * zoom / mPreviewSize.getWidth());
         matrix.postScale(scale, scale, centerX, centerY);
 
         int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
@@ -859,6 +894,12 @@ public class ReaderFragment extends Fragment
                             .setPositiveButton(android.R.string.ok, null)
                             .show();
                 }
+                break;
+            }
+            case R.id.torch: {
+                mFlashOn = !mFlashOn;
+                Log.d("djm", "mFlashOn " + mFlashOn);
+                createCameraPreviewSession();
                 break;
             }
         }

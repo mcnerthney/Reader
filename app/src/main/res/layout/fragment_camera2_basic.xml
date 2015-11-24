@@ -17,11 +17,20 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextureView
+    <com.softllc.reader.ZoomTextureView
         android:id="@+id/texture"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         />
+    <ImageButton
+        android:id="@+id/torch"
+        android:contentDescription="@string/description_info"
+        style="@android:style/Widget.Material.Light.Button.Borderless"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:padding="20dp"
+        android:src="@drawable/camera_flash_fill" />
 
     <FrameLayout
         android:id="@+id/control"
