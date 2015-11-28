@@ -6,7 +6,6 @@ import android.view.ScaleGestureDetector;
 import android.view.MotionEvent;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.os.Handler;
 
 public class ZoomTextureView extends TextureView {
 
@@ -35,7 +34,7 @@ public class ZoomTextureView extends TextureView {
             mScaleFactor *= detector.getScaleFactor();
 
             // Don't let the object get too small or too large.
-            mScaleFactor = Math.max(.5f, Math.min(mScaleFactor, 5.0f));
+            mScaleFactor = Math.max(.7f, Math.min(mScaleFactor, 7.0f));
             Log.d("djm", "mScaleFactor=" + mScaleFactor);
             return true;
         }

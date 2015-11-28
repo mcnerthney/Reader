@@ -418,17 +418,6 @@ public class ReaderFragment extends Fragment
         view.findViewById(R.id.info).setOnClickListener(this);
         view.findViewById(R.id.torch).setOnClickListener(this);
         mTextureView = (ZoomTextureView) view.findViewById(R.id.texture);
-        mTextureView.setLongClickable(true);
-        view.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                mFlashOn = !mFlashOn;
-                Log.d("djm", "mFlashOn " + mFlashOn);
-                createCameraPreviewSession();
-                return true;
-            }
-        });
-
     }
 
     @Override
