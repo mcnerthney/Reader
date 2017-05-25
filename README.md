@@ -1,5 +1,6 @@
 # Reader
 Reading Glasses
+distributed on Googgle Play Store https://play.google.com/store/apps/details?id=com.softllc.reader
 
 License
 -------
