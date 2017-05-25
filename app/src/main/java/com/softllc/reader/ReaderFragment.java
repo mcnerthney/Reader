@@ -415,10 +415,22 @@ public class ReaderFragment extends Fragment
 
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState) {
-        view.findViewById(R.id.picture).setOnClickListener(this);
-        view.findViewById(R.id.info).setOnClickListener(this);
-        view.findViewById(R.id.torch).setOnClickListener(this);
-        mTextureView = (ZoomTextureView) view.findViewById(R.id.texture);
+        View findView = view.findViewById(R.id.picture);
+        if ( findView != null) {
+            findView.setOnClickListener(this);
+        }
+        findView = view.findViewById(R.id.info);
+        if ( findView != null) {
+            findView.setOnClickListener(this);
+        }
+        findView = view.findViewById(R.id.torch);
+        if ( findView != null) {
+            findView.setOnClickListener(this);
+        }
+        findView = view.findViewById(R.id.texture);
+        if ( findView != null ) {
+            mTextureView = (ZoomTextureView) findView;
+        }
     }
 
     @Override
@@ -436,10 +448,12 @@ public class ReaderFragment extends Fragment
         // available, and "onSurfaceTextureAvailable" will not be called. In that case, we can open
         // a camera and start preview from here (otherwise, we wait until the surface is ready in
         // the SurfaceTextureListener).
-        if (mTextureView.isAvailable()) {
-            openCamera(mTextureView.getWidth(), mTextureView.getHeight());
-        } else {
-            mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+        if ( mTextureView != null ) {
+            if (mTextureView.isAvailable()) {
+                openCamera(mTextureView.getWidth(), mTextureView.getHeight());
+            } else {
+                mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+            }
         }
     }
 
@@ -714,7 +728,7 @@ public class ReaderFragment extends Fragment
                         }
                     }, null
             );
-        } catch (CameraAccessException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
