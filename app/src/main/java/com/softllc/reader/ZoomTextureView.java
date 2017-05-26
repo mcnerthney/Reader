@@ -11,6 +11,7 @@ public class ZoomTextureView extends TextureView {
 
     private ScaleGestureDetector mDetector;
     private float mScaleFactor = 2.5f;
+    private PrivatePreference mPreference;
 
     public ZoomTextureView(Context context) {
         this(context, null, 0);
@@ -25,7 +26,8 @@ public class ZoomTextureView extends TextureView {
 
         // Create our ScaleGestureDetector
         mDetector = new ScaleGestureDetector(context, new ScaleListener());
-
+        mPreference = new PrivatePreference(context,"ZoomTextureView");
+        mScaleFactor = mPreference.getFloat("ScaleFactor",2.5f);
     }
 
     private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
@@ -36,6 +38,7 @@ public class ZoomTextureView extends TextureView {
             // Don't let the object get too small or too large.
             mScaleFactor = Math.max(.7f, Math.min(mScaleFactor, 7.0f));
             Log.d("djm", "mScaleFactor=" + mScaleFactor);
+            mPreference.putFloat("ScaleFactor",mScaleFactor);
             return true;
         }
 
