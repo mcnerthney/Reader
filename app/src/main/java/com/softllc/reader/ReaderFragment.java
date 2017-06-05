@@ -8,6 +8,7 @@ import android.app.DialogFragment;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.ImageFormat;
@@ -70,6 +71,7 @@ public class ReaderFragment extends Fragment
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String FRAGMENT_DIALOG = "dialog";
+    private static final String SHARED_PREFERENCE_NAME = "ReaderFragment";
 
     static {
         ORIENTATIONS.append(Surface.ROTATION_0, 90);
@@ -128,6 +130,7 @@ public class ReaderFragment extends Fragment
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture texture, int width, int height) {
             openCamera(width, height);
+            configureTransform(width, height);
         }
 
         @Override
@@ -185,6 +188,7 @@ public class ReaderFragment extends Fragment
         @Override
         public void onOpened(@NonNull CameraDevice cameraDevice) {
             // This method is called when the camera is opened.  We start camera preview here.
+            Log.d("djm","CameraState.onOpened");
             mCameraOpenCloseLock.release();
             mCameraDevice = cameraDevice;
             createCameraPreviewSession();
@@ -192,6 +196,7 @@ public class ReaderFragment extends Fragment
 
         @Override
         public void onDisconnected(@NonNull CameraDevice cameraDevice) {
+            Log.d("djm","CameraState.onDisconnected");
             mCameraOpenCloseLock.release();
             cameraDevice.close();
             mCameraDevice = null;
@@ -199,6 +204,7 @@ public class ReaderFragment extends Fragment
 
         @Override
         public void onError(@NonNull CameraDevice cameraDevice, int error) {
+            Log.d("djm","CameraState.onError");
             mCameraOpenCloseLock.release();
             cameraDevice.close();
             mCameraDevice = null;
@@ -455,6 +461,7 @@ public class ReaderFragment extends Fragment
                 mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
             }
         }
+        Log.d("djm","ReaderFragment.onResume");
     }
 
     @Override
@@ -462,6 +469,7 @@ public class ReaderFragment extends Fragment
         closeCamera();
         stopBackgroundThread();
         super.onPause();
+        Log.d("djm","ReaderFragment.onPause");
     }
 
     private void requestCameraPermission() {
@@ -627,6 +635,7 @@ public class ReaderFragment extends Fragment
     private void closeCamera() {
         try {
             mCameraOpenCloseLock.acquire();
+            Log.d("djm","ReaderFragment.closeCamera");
             if (null != mCaptureSession) {
                 mCaptureSession.close();
                 mCaptureSession = null;
@@ -709,7 +718,9 @@ public class ReaderFragment extends Fragment
                                 // Flash is automatically enabled when necessary.
                                 //mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
                                 //        CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
-                                if ( mFlashOn ) {
+                                PrivatePreference privatePreference = new PrivatePreference(getActivity().getApplicationContext(),"ReaderFragment");
+
+                                if ( privatePreference.getBoolean("flash", false) ) {
                                     mPreviewRequestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_TORCH);
                                 }
                                 // Finally, we start displaying the camera preview.
@@ -719,12 +730,20 @@ public class ReaderFragment extends Fragment
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
+                            Log.d("djm","CameraCaptureSession.onConfigured");
                         }
 
                         @Override
                         public void onConfigureFailed(
                                 @NonNull CameraCaptureSession cameraCaptureSession) {
                             showToast("Failed");
+                        }
+
+                        @Override
+                        public void onClosed(@NonNull CameraCaptureSession session)
+                        {
+                            Log.d("djm","CameraCaptureSession.onClosed");
+
                         }
                     }, null
             );
@@ -901,8 +920,9 @@ public class ReaderFragment extends Fragment
                 break;
             }
             case R.id.torch: {
-                mFlashOn = !mFlashOn;
-                Log.d("djm", "mFlashOn " + mFlashOn);
+                PrivatePreference preference = new PrivatePreference(getActivity().getApplicationContext(),"ReaderFragment");
+                boolean flash = preference.putBoolean("flash", !preference.getBoolean("flash", false));
+                Log.d("djm", "flash " + flash);
                 createCameraPreviewSession();
                 break;
             }

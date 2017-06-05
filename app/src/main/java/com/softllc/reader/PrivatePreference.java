@@ -12,17 +12,18 @@ public class PrivatePreference {
     private SharedPreferences mSharedPreferences;
 
     public PrivatePreference(Context context, String name) {
-        SharedPreferences mSharedPreferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
+        mSharedPreferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
     }
 
     public Float getFloat(String key, Float def) {
         return mSharedPreferences.getFloat(key, def);
     }
 
-    public void putFloat(String key, Float value) {
+    public Float putFloat(String key, Float value) {
         SharedPreferences.Editor editor = mSharedPreferences.edit();
         editor.putFloat(key, value);
         editor.apply();
+        return value;
 
     }
 
@@ -30,9 +31,10 @@ public class PrivatePreference {
         return mSharedPreferences.getBoolean(key, def);
     }
 
-    public void putBoolean(String key, Boolean value) {
+    public Boolean putBoolean(String key, Boolean value) {
         SharedPreferences.Editor editor = mSharedPreferences.edit();
         editor.putBoolean(key, value);
         editor.apply();
+        return value;
     }
 }

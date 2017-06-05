@@ -25,9 +25,11 @@ public class ZoomTextureView extends TextureView {
         super(context, attrs, defStyle);
 
         // Create our ScaleGestureDetector
-        mDetector = new ScaleGestureDetector(context, new ScaleListener());
         mPreference = new PrivatePreference(context,"ZoomTextureView");
         mScaleFactor = mPreference.getFloat("ScaleFactor",2.5f);
+        mDetector = new ScaleGestureDetector(context, new ScaleListener());
+
+
     }
 
     private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
